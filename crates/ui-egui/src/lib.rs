@@ -100,6 +100,9 @@ pub mod gpu_canvas;
 pub mod gpu_status;
 pub mod gradient_ui;
 pub mod guide_layout_ui;
+pub mod hangul {
+    pub use photocraft_text::hangul::*;
+}
 pub mod hold_keys;
 pub mod i18n;
 mod icon_data;

@@ -36,7 +36,7 @@ impl AppleEvents {
                 .drain()
                 .into_iter()
                 .map(|e| match e {
-                    Event::Open(paths) => OsEvent::Open(paths.into_iter().map(|p| p.to_string_lossy().into_owned()).collect()),
+                    Event::Open(paths) => OsEvent::Open(paths.into_iter().map(|p| photocraft_text::hangul::compose_hangul(&p.to_string_lossy())).collect()),
                     Event::Quit => OsEvent::Quit,
                 })
                 .collect()

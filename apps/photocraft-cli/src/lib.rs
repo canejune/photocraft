@@ -150,7 +150,7 @@ pub fn run_os(args: &[std::ffi::OsString], out: &mut dyn Write, err: &mut dyn Wr
     let mut strings = Vec::with_capacity(args.len());
     for (i, a) in args.iter().enumerate() {
         match a.clone().into_string() {
-            Ok(s) => strings.push(s),
+            Ok(s) => strings.push(photocraft_text::hangul::compose_hangul(&s)),
             Err(raw) => {
                 let _ = writeln!(err, "error: argument {} is not valid Unicode: `{}`\n\n{USAGE}", i + 1, raw.to_string_lossy());
                 return 2;

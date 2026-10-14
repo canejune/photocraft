@@ -21,6 +21,7 @@ pub mod craft_fonts;
 pub mod engine_data;
 pub mod fonts;
 pub mod glyphs;
+pub mod hangul;
 pub mod layout;
 pub mod optical;
 pub mod psd;
@@ -37,6 +38,7 @@ use photocraft_doc::TextLayer;
 
 pub use craft_fonts::{CRAFT_FONTS, CraftFont};
 pub use fonts::{FaceInfo, FontDb, ResolvedFont};
+pub use hangul::compose_hangul;
 pub use layout::{
     ClusterInfo, LineInfo, PlacedGlyph, TextLayout, byte_index, char_index, hit_char, line_edge, line_index, line_step, text_point_inside, word_boundary,
 };

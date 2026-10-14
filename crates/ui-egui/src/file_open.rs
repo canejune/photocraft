@@ -56,12 +56,14 @@ pub(crate) fn with_missing_fonts_of(doc: &photocraft_doc::Document, mut warnings
 
 /// A dropped file's name ("dropped" when it has none).
 fn dropped_name(f: &egui::DroppedFileHandle) -> String {
-    f.path().file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| "dropped".into())
+    let name = f.path().file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| "dropped".into());
+    photocraft_text::hangul::compose_hangul(&name)
 }
 
 /// The file name of `path` (the document's display name), or `path` itself when it has none.
 pub fn display_name(path: &str) -> String {
-    std::path::Path::new(path).file_name().map(|n| n.to_string_lossy().to_string()).filter(|n| !n.is_empty()).unwrap_or_else(|| path.to_string())
+    let name = std::path::Path::new(path).file_name().map(|n| n.to_string_lossy().to_string()).filter(|n| !n.is_empty()).unwrap_or_else(|| path.to_string());
+    photocraft_text::hangul::compose_hangul(&name)
 }
 
 impl PhotocraftApp {

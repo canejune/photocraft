@@ -171,7 +171,7 @@ fn show_file_dialog(request: FileDialogRequest, parent: Option<&eframe::Frame>, 
 }
 
 fn path_of(file: &rfd::FileHandle) -> String {
-    file.path().to_string_lossy().into_owned()
+    photocraft_text::hangul::compose_hangul(&file.path().to_string_lossy())
 }
 
 /// Runs `future` to completion on this thread, sleeping until it is woken.

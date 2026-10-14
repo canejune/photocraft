@@ -311,7 +311,7 @@ fn table_offset(font: &[u8], index: u32, tag: &[u8; 4]) -> Option<usize> {
 }
 
 /// (ascent, descent, line gap) of a face in em, from its `hhea` table; `descent` is negative.
-fn vertical_metrics(font: &[u8], index: u32) -> Option<(f32, f32, f32)> {
+pub(crate) fn vertical_metrics(font: &[u8], index: u32) -> Option<(f32, f32, f32)> {
     let i16_at = |o: usize| be_u16(font, o).map(|v| v as i16 as f32);
     let (hhea, head) = (table_offset(font, index, b"hhea")?, table_offset(font, index, b"head")?);
     let upm = be_u16(font, head.checked_add(18)?)? as f32;
@@ -324,7 +324,7 @@ fn vertical_metrics(font: &[u8], index: u32) -> Option<(f32, f32, f32)> {
 /// The weight a variable face should be drawn at: Regular (400) within its `wght` axis, or
 /// `None` when it has no weight axis or already defaults to Regular. Noto Sans CJK's variable
 /// collection defaults to Thin (100), so the UI's CJK text came out hairline (#4820).
-fn regular_weight(font: &[u8], index: u32) -> Option<f32> {
+pub(crate) fn regular_weight(font: &[u8], index: u32) -> Option<f32> {
     let fvar = table_offset(font, index, b"fvar")?;
     let axes = fvar.checked_add(be_u16(font, fvar.checked_add(4)?)? as usize)?;
     let count = be_u16(font, fvar.checked_add(8)?)? as usize;
@@ -342,7 +342,7 @@ fn regular_weight(font: &[u8], index: u32) -> Option<f32> {
 /// `y_offset_factor` that puts `face`'s baseline where `primary`'s would be. egui centres a
 /// fallback face's row in the primary font's row, so a face with a big line gap (Hiragino: 0.5em)
 /// otherwise rides about 0.23em high next to Latin text.
-fn baseline_offset(face: (f32, f32, f32), primary: (f32, f32, f32)) -> f32 {
+pub(crate) fn baseline_offset(face: (f32, f32, f32), primary: (f32, f32, f32)) -> f32 {
     let height = |m: (f32, f32, f32)| m.0 - m.1 + m.2;
     let off = primary.0 - face.0 - 0.5 * (height(primary) - height(face));
     if off.is_finite() { off.clamp(-0.5, 0.5) } else { 0.0 }

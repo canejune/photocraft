@@ -378,7 +378,11 @@ pub fn font_files(script: CjkScript) -> Vec<FontFile> {
                 .chain([f("/System/Library/Fonts/Hiragino Sans GB.ttc", ""), f("/System/Library/Fonts/STHeiti Light.ttc", "Heiti SC")])
                 .collect(),
             TraditionalChinese => pingfang("PingFang TC".to_string()).into_iter().chain([f("/System/Library/Fonts/STHeiti Light.ttc", "Heiti TC")]).collect(),
-            Korean => vec![f("/System/Library/Fonts/AppleSDGothicNeo.ttc", "Apple SD Gothic Neo")],
+            Korean => vec![
+                f("/System/Library/Fonts/AppleSDGothicNeo.ttc", "Apple SD Gothic Neo"),
+                f("/System/Library/Fonts/Supplemental/AppleGothic.ttf", ""),
+                f("/Library/Fonts/Arial Unicode.ttf", ""),
+            ],
         }
     } else if cfg!(target_os = "windows") {
         let dir = std::env::var("WINDIR").unwrap_or_else(|_| "C:\\Windows".into());
@@ -664,6 +668,21 @@ mod tests {
         let sc = face_index_for_family(&bytes, "PingFang SC");
         let tc = face_index_for_family(&bytes, "PingFang TC");
         assert_ne!(sc, tc);
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn korean_font_candidates_have_glyphs() {
+        let files = font_files(Korean);
+        assert!(!files.is_empty());
+        let apple_sd = files.iter().find(|f| f.path == std::path::Path::new("/System/Library/Fonts/AppleSDGothicNeo.ttc"));
+        if let Some(f) = apple_sd {
+            if let Ok(bytes) = std::fs::read(&f.path) {
+                let idx = face_index_for_family(&bytes, &f.family);
+                assert_eq!(idx, 0);
+                assert!(crate::scripts::covering_face(&bytes, '\u{AC00}').is_some());
+            }
+        }
     }
 }
 

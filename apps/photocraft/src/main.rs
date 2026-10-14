@@ -216,7 +216,7 @@ fn main() -> eframe::Result {
             }
             // Old macOS passes a process serial number when launched from Finder.
             Some(s) if s.starts_with("-psn_") => {}
-            Some(s) => files.push(s.to_owned()),
+            Some(s) => files.push(photocraft_text::hangul::compose_hangul(s)),
             None => unreadable_paths.push(a.to_string_lossy().into_owned()),
         }
     }

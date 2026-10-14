@@ -822,6 +822,43 @@ impl Tokens {
     }
 }
 
+/// The name of the installed Korean fallback face added at startup.
+pub const SYSTEM_KOREAN_FALLBACK: &str = "system-korean-fallback";
+
+/// The installed fallback face for Korean, read once. `None` when it is turned off
+/// or no candidate is installed.
+pub fn korean_system_fallback() -> Option<Arc<FontData>> {
+    static CACHE: std::sync::OnceLock<Option<Arc<FontData>>> = std::sync::OnceLock::new();
+    CACHE
+        .get_or_init(|| {
+            if std::env::var_os("PHOTOCRAFT_SYSTEM_FONTS").is_some_and(|v| v == "0") {
+                return None;
+            }
+            let files = photocraft_text::cjk::font_files(photocraft_text::cjk::CjkScript::Korean);
+            for f in files {
+                let Ok(meta) = std::fs::metadata(&f.path) else { continue };
+                if !meta.is_file() || meta.len() == 0 || meta.len() > crate::cjk_fonts::MAX_FONT_BYTES {
+                    continue;
+                }
+                let Ok(bytes) = std::fs::read(&f.path) else { continue };
+                let Some(index) = photocraft_text::scripts::covering_face(&bytes, '\u{AC00}') else { continue };
+                let mut data = FontData::from_owned(bytes);
+                data.index = index;
+                let primary = crate::cjk_fonts::vertical_metrics(photocraft_text::fonts::INTER_REGULAR.as_slice(), 0);
+                if let (Some(face), Some(primary)) = (crate::cjk_fonts::vertical_metrics(&data.font, data.index), primary) {
+                    data.tweak.y_offset_factor = crate::cjk_fonts::baseline_offset(face, primary);
+                }
+                if let Some(weight) = crate::cjk_fonts::regular_weight(&data.font, data.index) {
+                    data.tweak.coords = egui::epaint::text::VariationCoords::new([(b"wght", weight)]);
+                }
+                log::info!("UI font fallback: registered Korean system font {} (face {index})", f.path.display());
+                return Some(Arc::new(data));
+            }
+            None
+        })
+        .clone()
+}
+
 /// Register Inter (UI) and JetBrains Mono (numbers) plus named weights.
 pub fn install_fonts(ctx: &egui::Context) {
     install_fonts_with(ctx, crate::cjk_fonts::Sources::system());
@@ -857,6 +894,12 @@ pub fn install_fonts_with(ctx: &egui::Context, cjk: crate::cjk_fonts::Sources) {
         let mut stack: Vec<String> = primary.into_iter().collect();
         stack.extend(fallback.iter().cloned());
         fonts.families.insert(FontFamily::Name(fam.into()), stack);
+    }
+    if let Some(korean) = korean_system_fallback() {
+        fonts.font_data.insert(SYSTEM_KOREAN_FALLBACK.to_owned(), korean);
+        for stack in fonts.families.values_mut() {
+            stack.push(SYSTEM_KOREAN_FALLBACK.to_owned());
+        }
     }
     let size = ui_font_size(ctx);
     for (name, data) in &mut fonts.font_data {
